@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
 
         // OpenAI API 호출
         const completion = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
+            model: "gpt-4.0",
             messages: messages,
             max_tokens: 500,
             temperature: 0.5, // 0.7에서 0.5로 낮춤
