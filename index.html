@@ -23,13 +23,16 @@
             border: 2px solid #ddd;
             border-radius: 5px;
             background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .message {
-            margin: 10px 0;
             padding: 10px;
             border-radius: 5px;
-            max-width: 80%;
+            max-width: 70%;
+            word-wrap: break-word;
         }
 
         .user-message {
@@ -55,6 +58,7 @@
         }
 
         button {
+            margin-top: 10px;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
@@ -83,12 +87,15 @@
     <div id="conversation"></div>
 
     <!-- 입력창과 버튼 -->
-    <textarea id="prompt" placeholder="질문을 입력하세요"></textarea>
+    <textarea id="prompt" placeholder="질문을 입력하세요 (Enter로 제출)"></textarea>
     <button id="submitBtn" onclick="sendPrompt()">질문하기</button>
 
     <script>
         const conversationDiv = document.getElementById('conversation');
         const submitBtn = document.getElementById('submitBtn');
+        const promptInput = document.getElementById('prompt');
+        let conversationId = 'test-session'; // 예제: 고유 세션 ID 설정 (실제 서비스에서는 유저별로 고유 ID 생성 필요)
+        let userId = 'guest-user'; // 예제: 사용자 고유 ID (로그인 기능이 없는 경우 기본값 사용)
 
         // 대화 추가 함수
         function addMessage(content, role) {
@@ -103,7 +110,7 @@
 
         // 프롬프트 전송 함수
         async function sendPrompt() {
-            const prompt = document.getElementById("prompt").value.trim();
+            const prompt = promptInput.value.trim();
 
             // 사용자가 입력하지 않았을 경우 처리
             if (!prompt) {
@@ -113,7 +120,7 @@
 
             // 사용자 메시지 추가
             addMessage(prompt, "user");
-            document.getElementById("prompt").value = ""; // 입력창 초기화
+            promptInput.value = ""; // 입력창 초기화
             submitBtn.disabled = true;
 
             try {
@@ -121,7 +128,7 @@
                 const response = await fetch("/api/generate", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt }),
+                    body: JSON.stringify({ prompt, userId, conversationId }),
                 });
 
                 const data = await response.json();
@@ -141,7 +148,7 @@
         }
 
         // Enter 키로 제출 가능하게 설정
-        document.getElementById('prompt').addEventListener('keypress', function (e) {
+        promptInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendPrompt();

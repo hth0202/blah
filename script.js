@@ -1,7 +1,7 @@
 // HTML 요소 선택
-const conversationDiv = document.getElementById('conversation');
-const submitBtn = document.getElementById('submitBtn');
-const promptInput = document.getElementById('prompt');
+const conversationDiv = document.getElementById("conversation");
+const submitBtn = document.getElementById("submitBtn");
+const promptInput = document.getElementById("prompt");
 
 // 대화 내역 추가 함수
 function addMessage(content, role) {
@@ -30,7 +30,11 @@ async function sendPrompt() {
     submitBtn.disabled = true; // 버튼 비활성화
 
     // 로딩 메시지 표시
-    addMessage("답변을 생성하고 있습니다...", "ai");
+    const loadingMessage = document.createElement("div");
+    loadingMessage.className = "message ai-message loading";
+    loadingMessage.innerText = "답변을 생성하고 있습니다...";
+    conversationDiv.appendChild(loadingMessage);
+    conversationDiv.scrollTop = conversationDiv.scrollHeight;
 
     try {
         // API 호출
@@ -44,22 +48,28 @@ async function sendPrompt() {
 
         // AI 응답 추가
         if (response.ok) {
+            loadingMessage.remove(); // 로딩 메시지 제거
             addMessage(data.result || "결과가 없습니다.", "ai");
         } else {
-            addMessage("오류 발생: " + (data.error || "알 수 없는 오류"), "ai");
+            loadingMessage.remove();
+            addMessage("오류 발생: " + (data.error || "알 수 없는 오류"), "ai error");
         }
     } catch (error) {
         console.error("오류 발생:", error);
-        addMessage("네트워크 오류가 발생했습니다.", "ai");
+        loadingMessage.remove();
+        addMessage("네트워크 오류가 발생했습니다.", "ai error");
     } finally {
         submitBtn.disabled = false; // 버튼 활성화
     }
 }
 
 // Enter 키로 제출 가능하게 설정
-promptInput.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
+promptInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         sendPrompt();
     }
 });
+
+// 버튼 클릭 이벤트 핸들러
+submitBtn.addEventListener("click", sendPrompt);

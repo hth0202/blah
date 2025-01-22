@@ -59,11 +59,13 @@ module.exports = async (req, res) => {
     try {
         const { prompt, userId, conversationId } = req.body;
 
+        // 필수 입력값 검증
         if (!prompt || !userId || !conversationId) {
             res.status(400).json({ error: "필수 입력값(prompt, userId, conversationId)이 누락되었습니다." });
             return;
         }
 
+        // 대화 이력 가져오기
         const conversationKey = `${userId}-${conversationId}`;
         const messages = getConversationMessages(conversationKey);
 
@@ -72,10 +74,10 @@ module.exports = async (req, res) => {
 
         // OpenAI API 호출
         const completion = await openai.chat.completions.create({
-            model: "gpt-4.0",
+            model: "gpt-4.0", // 사용 중인 모델 지정
             messages: messages,
-            max_tokens: 500,
-            temperature: 0.5,
+            max_tokens: 500, // 최대 토큰 수
+            temperature: 0.5, // 응답 다양성 조절
             presence_penalty: 0.6,
             frequency_penalty: 0.5,
         });
@@ -93,6 +95,7 @@ module.exports = async (req, res) => {
             });
         }
 
+        // 성공 응답 전송
         res.status(200).json({
             result: assistantResponse,
             conversationId,
@@ -101,6 +104,7 @@ module.exports = async (req, res) => {
     } catch (error) {
         console.error("OpenAI API 호출 중 오류:", error);
 
+        // 에러 응답 전송
         const errorResponse = {
             error: "OpenAI API 호출 중 문제가 발생했습니다.",
             details: process.env.NODE_ENV === "development" ? error.message : undefined,
