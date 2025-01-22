@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPT 테스트</title>
+    <title>GPT 대화 테스트</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -12,12 +12,42 @@
             margin: 0 auto;
             padding: 20px;
             line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+
+        #conversation {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background-color: #e3f2fd;
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        .ai-message {
+            background-color: #e8f5e9;
+            align-self: flex-start;
+            text-align: left;
         }
 
         textarea {
             width: 100%;
-            height: 150px;
-            margin-bottom: 15px;
+            height: 100px;
+            margin-top: 20px;
             padding: 10px;
             border: 2px solid #ddd;
             border-radius: 5px;
@@ -25,7 +55,7 @@
         }
 
         button {
-            padding: 12px 25px;
+            padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
             background-color: #007bff;
@@ -43,75 +73,68 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
-
-        #response {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            background-color: #f8f9fa;
-            min-height: 100px;
-            font-size: 1.1em;
-            color: #333;
-        }
-
-        .loading {
-            color: #666;
-            font-style: italic;
-        }
-
-        .error {
-            color: #dc3545;
-        }
     </style>
 </head>
 
 <body>
-    <h1>GPT 테스트</h1>
-    <textarea id="prompt" placeholder="질문을 입력하세요 (예: '안녕하세요, 오늘 날씨에 대해 알려주세요.')"></textarea>
+    <h1>GPT 대화 테스트</h1>
+
+    <!-- 대화 내역 표시 -->
+    <div id="conversation"></div>
+
+    <!-- 입력창과 버튼 -->
+    <textarea id="prompt" placeholder="질문을 입력하세요"></textarea>
     <button id="submitBtn" onclick="sendPrompt()">질문하기</button>
-    <div id="response"></div>
 
     <script>
+        const conversationDiv = document.getElementById('conversation');
         const submitBtn = document.getElementById('submitBtn');
-        const responseDiv = document.getElementById('response');
 
+        // 대화 추가 함수
+        function addMessage(content, role) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${role}-message`; // user-message 또는 ai-message 클래스 적용
+            messageDiv.innerText = content;
+            conversationDiv.appendChild(messageDiv);
+
+            // 스크롤을 항상 아래로 유지
+            conversationDiv.scrollTop = conversationDiv.scrollHeight;
+        }
+
+        // 프롬프트 전송 함수
         async function sendPrompt() {
             const prompt = document.getElementById("prompt").value.trim();
 
-            // 버튼 비활성화 및 로딩 표시
-            submitBtn.disabled = true;
-            responseDiv.className = 'loading';
-            responseDiv.innerText = "답변을 생성하고 있습니다...";
-
+            // 사용자가 입력하지 않았을 경우 처리
             if (!prompt) {
-                responseDiv.className = 'error';
-                responseDiv.innerText = "질문을 입력해주세요!";
-                submitBtn.disabled = false;
+                alert("질문을 입력해주세요!");
                 return;
             }
 
+            // 사용자 메시지 추가
+            addMessage(prompt, "user");
+            document.getElementById("prompt").value = ""; // 입력창 초기화
+            submitBtn.disabled = true;
+
             try {
+                // API 호출
                 const response = await fetch("/api/generate", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ prompt }),
                 });
 
-                console.log("API 호출 상태:", response.status);
                 const data = await response.json();
-                console.log("응답 데이터:", data);
 
-                responseDiv.className = '';
+                // AI 응답 추가
                 if (response.ok) {
-                    responseDiv.innerText = data.result || "결과가 없습니다.";
+                    addMessage(data.result || "결과가 없습니다.", "ai");
                 } else {
-                    responseDiv.className = 'error';
-                    responseDiv.innerText = data.error || "오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+                    addMessage("오류 발생: " + (data.error || "알 수 없는 오류"), "ai");
                 }
             } catch (error) {
                 console.error("오류 발생:", error);
-                responseDiv.className = 'error';
-                responseDiv.innerText = "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.";
+                addMessage("네트워크 오류가 발생했습니다.", "ai");
             } finally {
                 submitBtn.disabled = false;
             }
