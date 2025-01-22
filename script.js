@@ -1,18 +1,18 @@
-// HTML 요소 선택
 const infoForm = document.getElementById("infoForm");
 const industryInput = document.getElementById("industry");
 const roleInput = document.getElementById("role");
 const startBtn = document.getElementById("startBtn");
 
+const serviceDescription = document.getElementById("serviceDescription");
 const conversationContainer = document.getElementById("conversationContainer");
 const conversationDiv = document.getElementById("conversation");
 const promptInput = document.getElementById("prompt");
 const submitBtn = document.getElementById("submitBtn");
 
-let industry = "";
-let role = "";
 let conversationId = "test-session"; // 예제 세션 ID
 let userId = "guest-user"; // 사용자 ID
+let industry = "";
+let role = "";
 
 // 메시지 추가 함수
 function addMessage(content, role) {
@@ -26,7 +26,7 @@ function addMessage(content, role) {
 }
 
 // 면접 시작 함수
-function startConversation() {
+async function startConversation() {
     industry = industryInput.value.trim();
     role = roleInput.value.trim();
 
@@ -36,16 +36,36 @@ function startConversation() {
         return;
     }
 
-    // UI 전환: 폼 숨기고 대화 화면 표시
+    // UI 전환
     infoForm.style.display = "none";
+    serviceDescription.style.display = "block";
     conversationContainer.style.display = "block";
 
-    // AI 메시지: 사용자 정보를 기반으로 질문 준비
-    addMessage(`당신은 [${industry}] 산업의 [${role}] 직무 지원자입니다.`, "ai");
-    addMessage("준비가 되셨으면 질문을 입력해주세요!", "ai");
+    // 초기 대화 시작: 산업군과 직무 정보를 백엔드로 전달
+    const initialPrompt = `사용자는 [${industry}] 산업의 [${role}] 직무를 지원합니다. 이에 맞춰 면접을 진행해주세요.`;
+    addMessage(initialPrompt, "user");
+
+    // AI 응답 요청
+    try {
+        const response = await fetch("/api/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: initialPrompt, userId, conversationId }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            addMessage(data.result || "결과가 없습니다.", "ai");
+        } else {
+            addMessage("오류 발생: " + (data.error || "알 수 없는 오류"), "ai");
+        }
+    } catch (error) {
+        console.error("오류 발생:", error);
+        addMessage("네트워크 오류가 발생했습니다.", "ai");
+    }
 }
 
-// 프롬프트 전송 함수
+// 대화 전송 함수
 async function sendPrompt() {
     const prompt = promptInput.value.trim();
 
@@ -55,42 +75,28 @@ async function sendPrompt() {
         return;
     }
 
-    // 사용자 메시지 추가
     addMessage(prompt, "user");
-    promptInput.value = ""; // 입력창 초기화
-    submitBtn.disabled = true; // 버튼 비활성화
-
-    // 로딩 메시지
-    const loadingMessage = document.createElement("div");
-    loadingMessage.className = "message ai-message loading";
-    loadingMessage.innerText = "답변을 생성하고 있습니다...";
-    conversationDiv.appendChild(loadingMessage);
-    conversationDiv.scrollTop = conversationDiv.scrollHeight;
+    promptInput.value = "";
+    submitBtn.disabled = true;
 
     try {
-        // API 호출
         const response = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt, industry, role, userId, conversationId }),
+            body: JSON.stringify({ prompt, userId, conversationId }),
         });
 
         const data = await response.json();
-
-        // AI 응답 추가
         if (response.ok) {
-            loadingMessage.remove(); // 로딩 메시지 제거
             addMessage(data.result || "결과가 없습니다.", "ai");
         } else {
-            loadingMessage.remove();
             addMessage("오류 발생: " + (data.error || "알 수 없는 오류"), "ai");
         }
     } catch (error) {
         console.error("오류 발생:", error);
-        loadingMessage.remove();
         addMessage("네트워크 오류가 발생했습니다.", "ai");
     } finally {
-        submitBtn.disabled = false; // 버튼 활성화
+        submitBtn.disabled = false;
     }
 }
 

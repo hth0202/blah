@@ -24,7 +24,7 @@
 
         #conversationContainer {
             display: none;
-            /* 폼 제출 후 활성화 */
+            /* 초기에는 숨김 */
         }
 
         #conversation {
@@ -91,10 +91,12 @@
 </head>
 
 <body>
-    <h1>GPT 대화 테스트</h1>
+    <h1>아무말면접</h1>
 
     <!-- 서비스 설명 -->
-    <p>이 서비스는 산업군과 직무를 기반으로 면접 질문을 생성하여, 지원자가 실제 면접을 대비할 수 있도록 돕는 AI 대화 프로그램입니다.</p>
+    <p id="serviceDescription" style="display: none;">
+        이 서비스는 사용자가 선택한 산업군과 직무를 기반으로, 면접 상황을 시뮬레이션하는 대화형 AI 서비스입니다.
+    </p>
 
     <!-- 입력 폼 -->
     <form id="infoForm">
