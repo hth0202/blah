@@ -4,17 +4,17 @@ const industryInput = document.getElementById("industry");
 const roleInput = document.getElementById("role");
 const startBtn = document.getElementById("startBtn");
 
-const conversationDiv = document.getElementById("conversation");
 const conversationContainer = document.getElementById("conversationContainer");
-const submitBtn = document.getElementById("submitBtn");
+const conversationDiv = document.getElementById("conversation");
 const promptInput = document.getElementById("prompt");
+const submitBtn = document.getElementById("submitBtn");
 
-let industry = ""; // 사용자 입력 산업군
-let role = ""; // 사용자 입력 직무
+let industry = "";
+let role = "";
 let conversationId = "test-session"; // 예제 세션 ID
 let userId = "guest-user"; // 사용자 ID
 
-// 대화 내역 추가 함수
+// 메시지 추가 함수
 function addMessage(content, role) {
     const messageDiv = document.createElement("div");
     messageDiv.className = `message ${role}-message`; // user-message 또는 ai-message 클래스 적용
@@ -25,7 +25,7 @@ function addMessage(content, role) {
     conversationDiv.scrollTop = conversationDiv.scrollHeight;
 }
 
-// 산업군/직무 입력 후 면접 시작
+// 면접 시작 함수
 function startConversation() {
     industry = industryInput.value.trim();
     role = roleInput.value.trim();
@@ -36,11 +36,11 @@ function startConversation() {
         return;
     }
 
-    // UI 전환: 입력 폼 숨기고 대화 화면 표시
-    infoForm.classList.remove("active");
-    conversationContainer.classList.add("active");
+    // UI 전환: 폼 숨기고 대화 화면 표시
+    infoForm.style.display = "none";
+    conversationContainer.style.display = "block";
 
-    // 첫 AI 메시지 추가
+    // AI 메시지: 사용자 정보를 기반으로 질문 준비
     addMessage(`당신은 [${industry}] 산업의 [${role}] 직무 지원자입니다.`, "ai");
     addMessage("준비가 되셨으면 질문을 입력해주세요!", "ai");
 }
@@ -49,7 +49,7 @@ function startConversation() {
 async function sendPrompt() {
     const prompt = promptInput.value.trim();
 
-    // 사용자가 입력하지 않았을 경우 처리
+    // 입력값 확인
     if (!prompt) {
         alert("질문을 입력해주세요!");
         return;
@@ -60,7 +60,7 @@ async function sendPrompt() {
     promptInput.value = ""; // 입력창 초기화
     submitBtn.disabled = true; // 버튼 비활성화
 
-    // 로딩 메시지 표시
+    // 로딩 메시지
     const loadingMessage = document.createElement("div");
     loadingMessage.className = "message ai-message loading";
     loadingMessage.innerText = "답변을 생성하고 있습니다...";
@@ -83,27 +83,24 @@ async function sendPrompt() {
             addMessage(data.result || "결과가 없습니다.", "ai");
         } else {
             loadingMessage.remove();
-            addMessage("오류 발생: " + (data.error || "알 수 없는 오류"), "ai error");
+            addMessage("오류 발생: " + (data.error || "알 수 없는 오류"), "ai");
         }
     } catch (error) {
         console.error("오류 발생:", error);
         loadingMessage.remove();
-        addMessage("네트워크 오류가 발생했습니다.", "ai error");
+        addMessage("네트워크 오류가 발생했습니다.", "ai");
     } finally {
         submitBtn.disabled = false; // 버튼 활성화
     }
 }
 
-// Enter 키로 제출 가능하게 설정
+// 이벤트 리스너
+startBtn.addEventListener("click", startConversation);
+submitBtn.addEventListener("click", sendPrompt);
+
 promptInput.addEventListener("keypress", function (e) {
     if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         sendPrompt();
     }
 });
-
-// 버튼 클릭 이벤트 핸들러
-submitBtn.addEventListener("click", sendPrompt);
-
-// 면접 시작 버튼 클릭 이벤트
-startBtn.addEventListener("click", startConversation);

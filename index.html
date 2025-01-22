@@ -15,14 +15,16 @@
             background-color: #f5f5f5;
         }
 
-        #infoForm,
-        #conversationContainer {
-            display: none;
+        #infoForm {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        #infoForm.active,
-        #conversationContainer.active {
-            display: block;
+        #conversationContainer {
+            display: none;
+            /* 폼 제출 후 활성화 */
         }
 
         #conversation {
@@ -67,7 +69,6 @@
         }
 
         button {
-            margin-top: 10px;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
@@ -92,113 +93,24 @@
 <body>
     <h1>GPT 대화 테스트</h1>
 
-    <!-- 산업군/직무 입력 단계 -->
-    <div id="infoForm" class="active">
-        <p>산업군과 직무를 입력하세요.</p>
-        <div>
-            <label for="industry">산업군:</label>
-            <input type="text" id="industry" placeholder="예: 에듀테크">
-        </div>
-        <div>
-            <label for="role">직무:</label>
-            <input type="text" id="role" placeholder="예: 서비스 기획">
-        </div>
-        <button id="startBtn" onclick="startConversation()">면접 시작</button>
-    </div>
+    <!-- 서비스 설명 -->
+    <p>이 서비스는 산업군과 직무를 기반으로 면접 질문을 생성하여, 지원자가 실제 면접을 대비할 수 있도록 돕는 AI 대화 프로그램입니다.</p>
+
+    <!-- 입력 폼 -->
+    <form id="infoForm">
+        <input id="industry" type="text" placeholder="산업군 (예: 제조업)" required />
+        <input id="role" type="text" placeholder="직무 (예: 서비스 기획)" required />
+        <button id="startBtn" type="button">면접 시작</button>
+    </form>
 
     <!-- 대화 화면 -->
     <div id="conversationContainer">
         <div id="conversation"></div>
         <textarea id="prompt" placeholder="질문을 입력하세요 (Enter로 제출)"></textarea>
-        <button id="submitBtn" onclick="sendPrompt()">질문하기</button>
+        <button id="submitBtn">질문하기</button>
     </div>
 
-    <script>
-        const infoForm = document.getElementById('infoForm');
-        const conversationContainer = document.getElementById('conversationContainer');
-        const conversationDiv = document.getElementById('conversation');
-        const promptInput = document.getElementById('prompt');
-        const submitBtn = document.getElementById('submitBtn');
-        let industry = '';
-        let role = '';
-        let conversationId = 'test-session'; // 예제 세션 ID
-        let userId = 'guest-user'; // 사용자 ID
-
-        // 산업군/직무 입력 후 면접 시작
-        function startConversation() {
-            industry = document.getElementById('industry').value.trim();
-            role = document.getElementById('role').value.trim();
-
-            if (!industry || !role) {
-                alert("산업군과 직무를 모두 입력하세요.");
-                return;
-            }
-
-            // 입력 화면 숨기고 대화 화면 표시
-            infoForm.classList.remove('active');
-            conversationContainer.classList.add('active');
-
-            // 면접 시작 메시지
-            addMessage(`당신은 [${industry}] 산업의 [${role}] 직무 지원자입니다.`, "ai");
-        }
-
-        // 대화 메시지 추가 함수
-        function addMessage(content, role) {
-            const messageDiv = document.createElement("div");
-            messageDiv.className = `message ${role}-message`;
-            messageDiv.innerText = content;
-            conversationDiv.appendChild(messageDiv);
-
-            // 스크롤 항상 아래로 유지
-            conversationDiv.scrollTop = conversationDiv.scrollHeight;
-        }
-
-        // 질문 전송 함수
-        async function sendPrompt() {
-            const prompt = promptInput.value.trim();
-            if (!prompt) {
-                alert("질문을 입력해주세요!");
-                return;
-            }
-
-            // 사용자 메시지 추가
-            addMessage(prompt, "user");
-            promptInput.value = ""; // 입력창 초기화
-            submitBtn.disabled = true; // 버튼 비활성화
-
-            // AI 응답 로딩 메시지
-            addMessage("답변을 생성하고 있습니다...", "ai");
-
-            try {
-                // API 호출
-                const response = await fetch("/api/generate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt, industry, role, userId, conversationId }),
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    addMessage(data.result || "결과가 없습니다.", "ai");
-                } else {
-                    addMessage("오류 발생: " + (data.error || "알 수 없는 오류"), "ai");
-                }
-            } catch (error) {
-                console.error("오류 발생:", error);
-                addMessage("네트워크 오류가 발생했습니다.", "ai");
-            } finally {
-                submitBtn.disabled = false; // 버튼 활성화
-            }
-        }
-
-        // Enter 키로 제출 가능하게 설정
-        promptInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendPrompt();
-            }
-        });
-    </script>
+    <script src="./script.js"></script>
 </body>
 
 </html>
