@@ -1,7 +1,18 @@
 // HTML 요소 선택
+const infoForm = document.getElementById("infoForm");
+const industryInput = document.getElementById("industry");
+const roleInput = document.getElementById("role");
+const startBtn = document.getElementById("startBtn");
+
 const conversationDiv = document.getElementById("conversation");
+const conversationContainer = document.getElementById("conversationContainer");
 const submitBtn = document.getElementById("submitBtn");
 const promptInput = document.getElementById("prompt");
+
+let industry = ""; // 사용자 입력 산업군
+let role = ""; // 사용자 입력 직무
+let conversationId = "test-session"; // 예제 세션 ID
+let userId = "guest-user"; // 사용자 ID
 
 // 대화 내역 추가 함수
 function addMessage(content, role) {
@@ -12,6 +23,26 @@ function addMessage(content, role) {
 
     // 스크롤을 항상 아래로 유지
     conversationDiv.scrollTop = conversationDiv.scrollHeight;
+}
+
+// 산업군/직무 입력 후 면접 시작
+function startConversation() {
+    industry = industryInput.value.trim();
+    role = roleInput.value.trim();
+
+    // 입력값 확인
+    if (!industry || !role) {
+        alert("산업군과 직무를 모두 입력해주세요.");
+        return;
+    }
+
+    // UI 전환: 입력 폼 숨기고 대화 화면 표시
+    infoForm.classList.remove("active");
+    conversationContainer.classList.add("active");
+
+    // 첫 AI 메시지 추가
+    addMessage(`당신은 [${industry}] 산업의 [${role}] 직무 지원자입니다.`, "ai");
+    addMessage("준비가 되셨으면 질문을 입력해주세요!", "ai");
 }
 
 // 프롬프트 전송 함수
@@ -41,7 +72,7 @@ async function sendPrompt() {
         const response = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt }),
+            body: JSON.stringify({ prompt, industry, role, userId, conversationId }),
         });
 
         const data = await response.json();
@@ -73,3 +104,6 @@ promptInput.addEventListener("keypress", function (e) {
 
 // 버튼 클릭 이벤트 핸들러
 submitBtn.addEventListener("click", sendPrompt);
+
+// 면접 시작 버튼 클릭 이벤트
+startBtn.addEventListener("click", startConversation);
