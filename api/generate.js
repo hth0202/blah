@@ -74,7 +74,7 @@ module.exports = async (req, res) => {
 
         // OpenAI API 호출
         const completion = await openai.chat.completions.create({
-            model: "gpt-4.0", // 사용 중인 모델 지정
+            model: "gpt-4o", // 사용 중인 모델 지정
             messages: messages,
             max_tokens: 500, // 최대 토큰 수
             temperature: 0.5, // 응답 다양성 조절
